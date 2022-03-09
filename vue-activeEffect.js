@@ -3,11 +3,20 @@ const data = { ok: true, text: 'hello vue3' }
 
 // 用一个全局变量存储被注册的副作用函数
 let activeEffect
+// effect栈
+const effectStack = []
+
 function effect(fn) {
   const effectFn = () => {
-    // 当effectFn执行时，将其设置为当前激活的副作用函数
+    cleanup(effectFn)
+    // 当调用effect注册副作用函数时，将副作用函数赋值给activeEffect
     activeEffect = effectFn
+    // 在调用副作用函数之前将当前副作用函数压入栈中
+    effectStack.push(effectFn)
     fn()
+    // 在当前副作用函数执行完毕后，将当前副作用函数弹出栈，并把activeEffect还原为之前的值
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
   }
 
   // activeEffect.deps用来存储所有与该副作用函数相关联的依赖集合
